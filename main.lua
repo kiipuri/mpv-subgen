@@ -33,23 +33,42 @@ local function main()
 
 	local socket = require("socket")
 	local function send_req()
+		-- Return if current subtitles are embedded
+		local is_subs_external = mp.get_property("current-tracks/sub/external")
+		local is_subtitle = mp.get_property("current-tracks/sub")
+		if is_subs_external == "no" and is_subtitle then
+			msg.info("Selected subtitles are embedded")
+			mp.osd_message("Selected subtitles are embedded")
+			return
+		end
+
 		local cwd = mp.get_property("working-directory") .. "/"
 		local tcp = assert(socket.tcp())
+
+		local sub_filename
+		if not is_subtitle then
+			sub_filename = mp.get_property("filename")
+			sub_filename = sub_filename:match(".*%.") .. "srt"
+			io.open(cwd .. sub_filename, "w"):close()
+		else
+			sub_filename = mp.get_property("current-tracks/sub/title")
+		end
 
 		tcp:connect("127.0.0.1", options.port)
 
 		local data = string.format(
-			'{"video": "%s", "subtitles": "%s", "start": "%s"}',
+			'{"video": "%s", "subtitles": "%s", "start": "%s", "audio": "%s"}',
 			cwd .. mp.get_property("filename"),
-			cwd .. mp.get_property("current-tracks/sub/title"),
-			mp.get_property_number("time-pos")
+			cwd .. sub_filename,
+			mp.get_property_number("time-pos"),
+			tonumber(mp.get_property_number("current-tracks/audio/src-id")) - 1
 		)
 
 		local ok, err = tcp:send(data)
 
 		if ok then
-			msg.info("Start retiming")
-			mp.osd_message("Start retiming")
+			msg.info("Start generating")
+			mp.osd_message("Start generating")
 		end
 
 		if err then
@@ -60,9 +79,10 @@ local function main()
 		while true do
 			local s, status, partial = tcp:receive()
 			if s or partial == "done" then
+				mp.commandv("sub-add", sub_filename)
 				mp.commandv("sub-reload")
-				msg.info("Subtitles retimed")
-				mp.osd_message("Subtitles retimed")
+				msg.info("Subtitles generated")
+				mp.osd_message("Subtitles generated")
 			end
 			if status == "closed" then
 				break
