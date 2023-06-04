@@ -2,14 +2,6 @@ local mp = require("mp")
 local msg = require("mp.msg")
 
 local function main()
-	-- Make sure only one server runs
-	local pgrep_cmd =
-		string.format('pgrep -f "python %s/server.py"', mp.get_script_directory(), mp.get_script_directory())
-	local is_running = io.popen(pgrep_cmd):read()
-	if is_running ~= nil then
-		return
-	end
-
 	local opt = require("mp.options")
 	local options = {
 		port = 65432,
@@ -17,9 +9,18 @@ local function main()
 	}
 	opt.read_options(options, "subgen")
 
-	local server =
-		string.format("setsid python '%s/server.py' --port %s >> /dev/null &", mp.get_script_directory(), options.port)
-	io.popen(server)
+	-- Make sure only one server runs
+	local pgrep_cmd =
+		string.format('pgrep -f "python %s/server.py"', mp.get_script_directory(), mp.get_script_directory())
+	local is_running = io.popen(pgrep_cmd):read()
+	if not is_running then
+		local server = string.format(
+			"setsid python '%s/server.py' --port %s > /dev/null &",
+			mp.get_script_directory(),
+			options.port
+		)
+		io.popen(server)
+	end
 
 	local function kill_server()
 		print("Killing server")
