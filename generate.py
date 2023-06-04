@@ -2,13 +2,18 @@ import math
 import os
 from datetime import timedelta
 
+import ffmpeg
 import srt
 import whisper_timestamped
 from pydub import AudioSegment
 
 
-def cut_audio(fileaudio, start_seconds, end_seconds):
-    sound = AudioSegment.from_file(fileaudio)
+def cut_audio(file, audio_track, start_seconds, end_seconds):
+    input = ffmpeg.input(file)
+    out = ffmpeg.output(input, "/tmp/out.mkv", map=f"0:{audio_track}", acodec="copy")
+    ffmpeg.run(out, overwrite_output=True)
+
+    sound = AudioSegment.from_file("/tmp/out.mkv")
 
     StrtTime = float(start_seconds) * 1000
     EndTime = float(end_seconds) * 1000
@@ -20,7 +25,7 @@ def cut_audio(fileaudio, start_seconds, end_seconds):
     return output
 
 
-def run_whisper(whisper_model, audio_file, language):
+def run_whisper(whisper_model, audio_file):
     # More accurate but slower transcription
     # result = whisper_timestamped.transcribe(
     #     whisper_model,
@@ -36,7 +41,6 @@ def run_whisper(whisper_model, audio_file, language):
     result = whisper_timestamped.transcribe(
         whisper_model,
         audio_file,
-        language=language,
         vad=True,
         detect_disfluencies=True,
     )
@@ -92,8 +96,9 @@ def main(model, args):
     start_time = math.floor(float(args["start"]))
     end_time = start_time + 60 if "end" not in args else math.ceil(float(args["end"]))
     video_file = args["video"]
+    audio_track = args["audio"]
 
-    audio_file = cut_audio(video_file, start_time, end_time)
-    transcription = run_whisper(model, audio_file, None)
+    audio_file = cut_audio(video_file, audio_track, start_time, end_time)
+    transcription = run_whisper(model, audio_file)
     cut_subtitles = get_cut_subtitles(transcription, start_time)
     merge_subtitles(args["subtitles"], cut_subtitles, start_time, end_time)
