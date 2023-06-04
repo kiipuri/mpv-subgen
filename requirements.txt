@@ -1,0 +1,4 @@
+srt
+openai-whisper
+git+https://github.com/linto-ai/whisper-timestamped
+pydub
