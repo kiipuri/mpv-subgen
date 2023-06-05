@@ -10,10 +10,11 @@ from pydub import AudioSegment
 
 def cut_audio(file, audio_track, start_seconds, end_seconds):
     input = ffmpeg.input(file)
-    out = ffmpeg.output(input, "/tmp/out.mkv", map=f"0:{audio_track}", acodec="copy")
+    out_filename = "/tmp/out.mkv"
+    out = ffmpeg.output(input, out_filename, map=f"0:a:{audio_track}", acodec="copy")
     ffmpeg.run(out, overwrite_output=True)
 
-    sound = AudioSegment.from_file("/tmp/out.mkv")
+    sound = AudioSegment.from_file(out_filename)
 
     StrtTime = float(start_seconds) * 1000
     EndTime = float(end_seconds) * 1000

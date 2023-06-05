@@ -61,7 +61,7 @@ local function main()
 			cwd .. mp.get_property("filename"),
 			cwd .. sub_filename,
 			mp.get_property_number("time-pos"),
-			tonumber(mp.get_property_number("current-tracks/audio/src-id")) - 1
+			tonumber(mp.get_property_number("current-tracks/audio/id")) - 1
 		)
 
 		local ok, err = tcp:send(data)
