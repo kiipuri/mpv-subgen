@@ -1,5 +1,4 @@
 import argparse
-import datetime
 import json
 import socket
 
@@ -8,12 +7,12 @@ import whisper_timestamped
 import generate
 
 
-def server(port):
+def server(port, model):
     HOST = "127.0.0.1"
     PORT = port or 65432
 
-    print("Loading model: ", datetime.datetime.now())
-    whisper_model = whisper_timestamped.load_model("medium")
+    print("Loading model")
+    whisper_model = whisper_timestamped.load_model(model)
     print("Model loaded")
     print("Starting server")
 
@@ -37,11 +36,12 @@ def client(model, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="Subtitle Retimer")
+    parser = argparse.ArgumentParser(prog="Subtitle Generator")
     parser.add_argument("-p", "--port")
+    parser.add_argument("-m", "--model")
     cmd_args = parser.parse_args()
     port = int(cmd_args.port) if cmd_args.port else None
-    server(port)
+    server(port, cmd_args.model)
 
 
 if __name__ == "__main__":

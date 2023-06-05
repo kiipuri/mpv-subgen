@@ -6,6 +6,7 @@ local function main()
 	local options = {
 		port = 65432,
 		gen_key = "ctrl+x",
+		model = "medium",
 	}
 	opt.read_options(options, "subgen")
 
@@ -15,9 +16,10 @@ local function main()
 	local is_running = io.popen(pgrep_cmd):read()
 	if not is_running then
 		local server = string.format(
-			"setsid python '%s/server.py' --port %s > /dev/null &",
+			"setsid python '%s/server.py' --port %s --model %s > /dev/null &",
 			mp.get_script_directory(),
-			options.port
+			options.port,
+			options.model
 		)
 		io.popen(server)
 	end
