@@ -95,7 +95,7 @@ def merge_subtitles(orig_subtitles, cut_subtitles, start_time, end_time):
 
 def main(model, args):
     start_time = math.floor(float(args["start"]))
-    end_time = start_time + 60 if "end" not in args else math.ceil(float(args["end"]))
+    end_time = start_time if "end" not in args else math.ceil(float(args["end"]))
     video_file = args["video"]
     audio_track = args["audio"]
 
